@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Airtable — Petite Chérie</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 24px; max-width: 700px; margin: 0 auto; background: #fdf0f3; }
+  h1 { color: #C2607A; }
+  .box { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .label { font-size: 0.78rem; font-weight: 700; color: #888; text-transform: uppercase; margin-bottom: 8px; }
+  input { width: 100%; padding: 10px 14px; border: 1.5px solid #f5c4d0; border-radius: 8px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
+  button { background: #C2607A; color: white; padding: 11px 24px; border-radius: 20px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; width: 100%; margin-bottom: 8px; }
+  button.secondary { background: #555; }
+  .result { padding: 14px; border-radius: 10px; font-size: 0.85rem; white-space: pre-wrap; word-break: break-all; line-height: 1.7; display: none; font-family: monospace; }
+  .ok  { background: #f0fff4; color: #2e7d32; border: 1px solid #b2dfdb; }
+  .err { background: #fff0f0; color: #c33; border: 1px solid #ffcccc; }
+  .info { background: #e8f4ff; color: #1a5276; border: 1px solid #aed6f1; }
+</style>
+</head>
+<body>
+<h1>🔧 اختبار Airtable</h1>
+
+<div class="box">
+  <div class="label">معلومات Airtable</div>
+  <input id="token" placeholder="Token (patXXXXX...)" value="patLe6qZ6zM7f1E4s.c26515cbcad1acec689d4f8b557bb428ecc58c9c17387a461b0b403e0f5fe561">
+  <input id="base" placeholder="Base ID (appXXXXX)" value="app2WExX2KoZdDldq">
+  <input id="table" placeholder="Table ID (tblXXXXX)" value="tbloee4gwYyEushLP">
+</div>
+
+<div class="box">
+  <button onclick="testRead()">① اختبار القراءة (GET)</button>
+  <div class="result" id="read-result"></div>
+
+  <button onclick="testWrite()" style="margin-top:8px">② اختبار الكتابة (POST سجل تجريبي)</button>
+  <div class="result" id="write-result"></div>
+
+  <button onclick="testFields()" class="secondary" style="margin-top:8px">③ عرض أسماء الأعمدة الموجودة</button>
+  <div class="result" id="fields-result"></div>
+</div>
+
+<script>
+function getUrl() {
+  const base = document.getElementById('base').value.trim();
+  const table = document.getElementById('table').value.trim();
+  return `https://api.airtable.com/v0/${base}/${table}`;
+}
+function getToken() {
+  return document.getElementById('token').value.trim();
+}
+
+async function testRead() {
+  const el = document.getElementById('read-result');
+  el.style.display = 'block';
+  el.className = 'result info';
+  el.textContent = '⏳ جاري الاتصال...';
+  try {
+    const res = await fetch(getUrl() + '?maxRecords=3', {
+      headers: { 'Authorization': 'Bearer ' + getToken() }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      el.className = 'result ok';
+      el.textContent = '✅ الاتصال ناجح!\n\nعدد السجلات: ' + data.records.length + '\n\n' + JSON.stringify(data, null, 2).slice(0, 800);
+    } else {
+      el.className = 'result err';
+      el.textContent = '❌ خطأ ' + res.status + ':\n' + JSON.stringify(data, null, 2);
+    }
+  } catch(e) {
+    el.className = 'result err';
+    el.textContent = '❌ ' + e.message;
+  }
+}
+
+async function testWrite() {
+  const el = document.getElementById('write-result');
+  el.style.display = 'block';
+  el.className = 'result info';
+  el.textContent = '⏳ جاري الإرسال...';
+  try {
+    const res = await fetch(getUrl(), {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + getToken(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fields: {
+        'Reference':      'TEST-' + Date.now().toString().slice(-4),
+        'Date':           new Date().toLocaleString('fr-DZ'),
+        'Produit':        'اختبار تجريبي',
+        'Prix Produit':   '1000',
+        'Frais Livraison':'200',
+        'Prix Total':     '1200',
+        'Nom Client':     'اسم تجريبي',
+        'Telephone':      '0600000000',
+        'Wilaya':         '19 - Sétif',
+        'Adresse':        'عنوان تجريبي',
+        'Mode Livraison': 'إلى المنزل',
+        'Message':        'سجل اختبار',
+        'Categorie':      'test',
+        'Statut':         'En attente'
+      }})
+    });
+    const data = await res.json();
+    if (res.ok) {
+      el.className = 'result ok';
+      el.textContent = '✅ تم إرسال سجل تجريبي!\nID: ' + data.id + '\n\nافتح Airtable وتحقق أن السجل ظهر.';
+      // عرض ID لحذفه لاحقاً
+      document.getElementById('delete-id').value = data.id;
+      document.getElementById('delete-box').style.display = 'block';
+    } else {
+      el.className = 'result err';
+      el.textContent = '❌ فشل الإرسال:\n' + JSON.stringify(data, null, 2);
+    }
+  } catch(e) {
+    el.className = 'result err';
+    el.textContent = '❌ ' + e.message;
+  }
+}
+
+async function testFields() {
+  const el = document.getElementById('fields-result');
+  el.style.display = 'block';
+  el.className = 'result info';
+  el.textContent = '⏳ جاري قراءة الأعمدة...';
+  try {
+    const res = await fetch(getUrl() + '?maxRecords=1', {
+      headers: { 'Authorization': 'Bearer ' + getToken() }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      if (data.records.length === 0) {
+        el.className = 'result info';
+        el.textContent = '⚠️ الجدول فارغ — أضف سجلاً أولاً بالزر ②\nبعدها اضغط هذا الزر مرة ثانية لرؤية أسماء الأعمدة.';
+      } else {
+        const fields = Object.keys(data.records[0].fields);
+        el.className = 'result ok';
+        el.textContent = '✅ الأعمدة الموجودة (' + fields.length + '):\n\n' + fields.map(f => '• ' + f).join('\n');
+      }
+    } else {
+      el.className = 'result err';
+      el.textContent = '❌ ' + res.status + ': ' + JSON.stringify(data.error);
+    }
+  } catch(e) {
+    el.className = 'result err';
+    el.textContent = '❌ ' + e.message;
+  }
+}
+
+async function deleteTestRecord() {
+  const id = document.getElementById('delete-id').value.trim();
+  if (!id) return;
+  const res = await fetch(getUrl() + '/' + id, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + getToken() }
+  });
+  alert(res.ok ? '✅ تم حذف السجل التجريبي' : '❌ فشل الحذف');
+  document.getElementById('delete-box').style.display = 'none';
+}
+</script>
+
+<div class="box" id="delete-box" style="display:none">
+  <div class="label">حذف السجل التجريبي</div>
+  <input id="delete-id" placeholder="Record ID">
+  <button onclick="deleteTestRecord()" class="secondary">🗑️ حذف السجل التجريبي</button>
+</div>
+
+<div class="box">
+  <div class="label">⚠️ أسباب شائعة للمشكلة</div>
+  <div style="font-size:0.85rem;line-height:2;color:#555">
+    1. <b>Token لا يملك صلاحية على هذا الـ Base</b> — أنشئ token جديد واختر هذا الـ Base تحديداً<br>
+    2. <b>اسم عمود خاطئ</b> — اضغط ③ بعد إضافة سجل لرؤية الأسماء الدقيقة<br>
+    3. <b>Base ID أو Table ID خاطئ</b> — راجع الرابط في Airtable<br>
+    4. <b>الإنترنت محجوب</b> — جرب من شبكة مختلفة
+  </div>
+</div>
+</body>
+</html>
