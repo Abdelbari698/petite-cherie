@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Petite Chérie</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f5f5f7;color:#2C1A1F;font-size:14px}
+button{cursor:pointer;border:none;font-family:Arial,sans-serif}
+input,select{font-family:Arial,sans-serif;font-size:14px;outline:none}
+
+/* LOGIN */
+#pg-login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FDF0F3,#fff0f5)}
+.login-box{background:white;border-radius:20px;padding:40px 36px;width:100%;max-width:360px;box-shadow:0 12px 48px rgba(194,96,122,0.15);text-align:center}
+.login-box h1{font-style:italic;color:#C2607A;font-size:1.8rem;margin-bottom:4px}
+.login-box p{font-size:0.78rem;opacity:0.5;margin-bottom:24px}
+.login-box input{width:100%;padding:12px 16px;border:1.5px solid #F5C4D0;border-radius:10px;font-size:15px;margin-bottom:12px;text-align:center;letter-spacing:2px}
+.login-box input:focus{border-color:#C2607A}
+.login-box button{width:100%;background:#C2607A;color:white;padding:13px;border-radius:30px;font-size:1rem;font-weight:700}
+.login-box button:hover{background:#a84e67}
+.login-hint{font-size:0.75rem;color:#bbb;margin-top:12px}
+.login-err{color:#c33;font-size:0.82rem;margin-top:8px;display:none}
+
+/* DASHBOARD */
+#pg-dash{display:none}
+.header{background:white;border-bottom:1px solid #F5C4D0;padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header h1{font-style:italic;color:#C2607A;font-size:1.3rem}
+.header-btns{display:flex;gap:8px}
+.hbtn{padding:7px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;cursor:pointer}
+.hbtn-sync{background:#FDF0F3;color:#C2607A;border:1px solid #F5C4D0}
+.hbtn-out{background:none;color:#888;border:1px solid #ddd}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 20px}
+.stat{background:white;border-radius:12px;padding:14px 16px;border-right:4px solid #F5C4D0;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.stat.s1{border-color:#C2607A}.stat.s2{border-color:#E8A87C}.stat.s3{border-color:#25D366}.stat.s4{border-color:#7B9ED9}
+.stat-n{font-size:1.5rem;font-weight:700;line-height:1}
+.stat.s1 .stat-n{color:#C2607A}.stat.s2 .stat-n{color:#E8A87C}.stat.s3 .stat-n{color:#25D366}.stat.s4 .stat-n{color:#7B9ED9}
+.stat-l{font-size:0.7rem;opacity:0.5;margin-bottom:4px}
+
+/* FILTERS */
+.filters{padding:0 20px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search{flex:1;max-width:280px;display:flex;align-items:center;gap:6px;background:white;border:1.5px solid #F5C4D0;border-radius:10px;padding:8px 12px}
+.search input{border:none;background:none;flex:1;font-size:0.85rem}
+.ftab{padding:7px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;background:white;border:1.5px solid #ddd;cursor:pointer;color:#333;white-space:nowrap}
+.ftab.active,.ftab:hover{background:#C2607A;color:white;border-color:#C2607A}
+.actions{padding:0 20px 10px;display:flex;gap:8px;align-items:center}
+.abtn{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:10px;font-size:0.78rem;font-weight:600;background:white;border:1.5px solid #ddd;cursor:pointer}
+.abtn:hover{border-color:#C2607A;color:#C2607A}
+.orders-count{font-size:0.78rem;opacity:0.5;margin-right:auto}
+
+/* TABLE */
+.tbl-wrap{margin:0 20px 20px;background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 14px;text-align:right;font-size:0.7rem;font-weight:700;opacity:0.5;background:#FDF0F3;border-bottom:1px solid #F5C4D0;white-space:nowrap;text-transform:uppercase}
+td{padding:11px 14px;border-bottom:1px solid #f5f5f7;font-size:0.82rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fffafa}
+.ref{font-weight:700;color:#C2607A;font-size:0.76rem}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;cursor:pointer}
+.b-wait{background:#fff8e1;color:#856404}
+.b-conf{background:#e8f5e9;color:#2e7d32}
+.b-ship{background:#e3f2fd;color:#1565c0}
+.b-done{background:#e8f5e9;color:#1b5e20}
+.b-cancel{background:#fce4ec;color:#c62828}
+.ab{width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;background:#FDF0F3;border:none;cursor:pointer;color:#333;margin-left:3px}
+.ab:hover{background:#F5C4D0;color:#C2607A}
+.ab.del:hover{background:#fce4ec;color:#c62828}
+.empty{text-align:center;padding:48px;opacity:0.4}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(44,26,31,0.55);z-index:300;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
+.overlay.open{display:flex}
+.modal{background:white;border-radius:16px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.mhdr{padding:18px 22px;border-bottom:1px solid #FDF0F3;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1}
+.mhdr h2{font-size:0.95rem;font-weight:700}
+.mcls{width:30px;height:30px;border-radius:50%;background:#FDF0F3;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mbdy{padding:18px 22px 22px}
+.msec{margin-bottom:16px}
+.msec-t{font-size:0.66rem;font-weight:700;color:#C2607A;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px}
+.mrow{display:flex;gap:10px;margin-bottom:6px;font-size:0.82rem}
+.ml{opacity:0.5;min-width:110px;flex-shrink:0}
+.mv{font-weight:600}
+.s-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.sopt{padding:9px 6px;border-radius:10px;font-size:0.72rem;font-weight:600;text-align:center;cursor:pointer;border:2px solid transparent;background:#f5f5f5;transition:0.15s}
+.sopt:hover,.sopt.sel{border-color:#C2607A;background:#fff0f3}
+.macts{display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid #FDF0F3}
+.mbtn-save{flex:1;background:#C2607A;color:white;padding:11px;border-radius:28px;font-size:0.88rem;font-weight:700;border:none;cursor:pointer}
+.mbtn-save:hover{background:#a84e67}
+.mbtn-call{display:flex;align-items:center;gap:6px;background:#25D366;color:white;padding:11px 16px;border-radius:28px;font-size:0.82rem;font-weight:600;text-decoration:none}
+.mbtn-prt{display:flex;align-items:center;gap:5px;padding:11px 14px;border-radius:28px;font-size:0.82rem;background:#f5f5f5;border:none;cursor:pointer}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#2C1A1F;color:white;padding:9px 20px;border-radius:30px;font-size:0.8rem;z-index:9999;transition:transform 0.3s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{background:#2e7d32}
+.toast.err{background:#c33}
+
+/* SYNC BAR */
+#sbar{position:fixed;top:56px;left:50%;transform:translateX(-50%);background:#2C1A1F;color:white;padding:5px 16px;border-radius:0 0 10px 10px;font-size:0.76rem;z-index:200;display:none}
+
+@media(max-width:800px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  th:nth-child(3),td:nth-child(3),th:nth-child(5),td:nth-child(5),th:nth-child(6),td:nth-child(6){display:none}
+}
+@media(max-width:500px){
+  .stats{grid-template-columns:repeat(2,1fr);padding:12px}
+  .tbl-wrap{margin:0 12px 12px}
+  th:nth-child(4),td:nth-child(4){display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="pg-login">
+  <div class="login-box">
+    <h1>Petite Chérie</h1>
+    <p>لوحة تحكم الطلبيات</p>
+    <input type="password" id="pwd-input" placeholder="كلمة المرور">
+    <button id="login-btn">دخول ←</button>
+    <div class="login-hint">petitecherie2025</div>
+    <div class="login-err" id="login-err">❌ كلمة المرور خاطئة</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="pg-dash">
+  <div class="header">
+    <h1>Petite Chérie — Dashboard</h1>
+    <div class="header-btns">
+      <button class="hbtn hbtn-sync" id="sync-btn">⟳ مزامنة</button>
+      <a href="index.html" class="hbtn hbtn-out" style="text-decoration:none">🏠 الموقع</a>
+      <button class="hbtn hbtn-out" id="logout-btn">خروج</button>
+    </div>
+  </div>
+
+  <div id="sbar">⏳ جاري المزامنة...</div>
+
+  <div class="stats">
+    <div class="stat s1"><div class="stat-l">إجمالي الطلبيات</div><div class="stat-n" id="st-total">0</div></div>
+    <div class="stat s2"><div class="stat-l">قيد الانتظار</div><div class="stat-n" id="st-wait">0</div></div>
+    <div class="stat s3"><div class="stat-l">مُسلَّمة</div><div class="stat-n" id="st-done">0</div></div>
+    <div class="stat s4"><div class="stat-l">المبيعات (دج)</div><div class="stat-n" id="st-rev">0</div></div>
+  </div>
+
+  <div class="filters">
+    <div class="search">
+      <span style="opacity:0.4">🔍</span>
+      <input type="text" id="search-inp" placeholder="بحث — اسم، هاتف، مرجع...">
+    </div>
+    <button class="ftab active" data-f="all">الكل</button>
+    <button class="ftab" data-f="En attente">⏳ انتظار</button>
+    <button class="ftab" data-f="Confirmée">✅ مؤكدة</button>
+    <button class="ftab" data-f="En livraison">🚚 توصيل</button>
+    <button class="ftab" data-f="Livrée">🎉 مُسلَّمة</button>
+    <button class="ftab" data-f="Annulée">❌ ملغاة</button>
+  </div>
+
+  <div class="actions">
+    <span class="orders-count" id="ord-count">0 طلبية</span>
+    <button class="abtn" id="csv-btn">⬇ CSV</button>
+    <button class="abtn" id="print-btn">🖨 طباعة</button>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>المرجع</th>
+          <th>التاريخ</th>
+          <th>المنتج</th>
+          <th>الزبونة</th>
+          <th>الولاية</th>
+          <th>التوصيل</th>
+          <th>المجموع</th>
+          <th>الحالة</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="tbl-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="mhdr">
+      <h2>📦 تفاصيل الطلبية</h2>
+      <button class="mcls" id="modal-cls">✕</button>
+    </div>
+    <div class="mbdy">
+      <div class="msec">
+        <div class="msec-t">📋 الطلبية</div>
+        <div class="mrow"><span class="ml">المرجع</span><span class="mv" id="m-ref" style="color:#C2607A"></span></div>
+        <div class="mrow"><span class="ml">التاريخ</span><span class="mv" id="m-date"></span></div>
+        <div class="mrow"><span class="ml">المنتج</span><span class="mv" id="m-prod"></span></div>
+        <div class="mrow"><span class="ml">سعر المنتج</span><span class="mv" id="m-prix"></span></div>
+        <div class="mrow"><span class="ml">التوصيل</span><span class="mv" id="m-liv"></span></div>
+        <div class="mrow"><span class="ml">المجموع</span><span class="mv" id="m-tot" style="color:#C2607A;font-size:1rem"></span></div>
+        <div class="mrow" id="m-msg-row"><span class="ml">ملاحظة</span><span class="mv" id="m-msg" style="opacity:0.7"></span></div>
+      </div>
+      <div class="msec">
+        <div class="msec-t">👤 الزبونة</div>
+        <div class="mrow"><span class="ml">الاسم</span><span class="mv" id="m-nom"></span></div>
+        <div class="mrow"><span class="ml">الهاتف</span><span class="mv" id="m-tel"></span></div>
+        <div class="mrow"><span class="ml">الولاية</span><span class="mv" id="m-wil"></span></div>
+        <div class="mrow"><span class="ml">العنوان</span><span class="mv" id="m-adr"></span></div>
+        <div class="mrow"><span class="ml">طريقة التوصيل</span><span class="mv" id="m-mod"></span></div>
+      </div>
+      <div class="msec">
+        <div class="msec-t">📊 تغيير الحالة</div>
+        <div class="s-grid">
+          <div class="sopt" data-s="En attente">⏳ انتظار</div>
+          <div class="sopt" data-s="Confirmée">✅ مؤكدة</div>
+          <div class="sopt" data-s="En livraison">🚚 توصيل</div>
+          <div class="sopt" data-s="Livrée">🎉 مُسلَّمة</div>
+          <div class="sopt" data-s="Annulée">❌ ملغاة</div>
+          <div class="sopt" data-s="Supprimée">🗑️ حذف</div>
+        </div>
+      </div>
+      <div class="macts">
+        <button class="mbtn-save" id="save-btn">💾 حفظ الحالة</button>
+        <a class="mbtn-call" id="call-link" href="#">📞 اتصال</a>
+        <button class="mbtn-prt" id="prt-btn">🖨</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var PWD    = 'petitecherie2025';
+var TOKEN  = 'patDOIoWc9rzq0tbx.55d11757f728dc21adabe9d09d9cfe5f70637de7e3369ea3a62c75f7ec2a0d57';
+var AT_URL = 'https://api.airtable.com/v0/app2WExX2KoZdDldq/tbloee4gwYyEushLP';
+var HDR    = { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' };
+
+var allOrders = [];
+var curFilter = 'all';
+var curOrder  = null;
+var curStatus = '';
+
+// ── LOGIN ──────────────────────────────────────────
+function tryLogin() {
+  var v = document.getElementById('pwd-input').value.trim();
+  if (v === PWD) {
+    localStorage.setItem('dash_auth', PWD);
+    document.getElementById('pg-login').style.display = 'none';
+    document.getElementById('pg-dash').style.display  = 'block';
+    loadOrders();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+
+document.getElementById('login-btn').addEventListener('click', tryLogin);
+document.getElementById('pwd-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') tryLogin();
+});
+document.getElementById('logout-btn').addEventListener('click', function() {
+  localStorage.removeItem('dash_auth');
+  location.reload();
+});
+
+// Auto-login
+if (localStorage.getItem('dash_auth') === PWD) {
+  document.getElementById('pg-login').style.display = 'none';
+  document.getElementById('pg-dash').style.display  = 'block';
+  loadOrders();
+}
+
+// ── DATA ───────────────────────────────────────────
+async function loadOrders() {
+  // من localStorage أولاً
+  var cached = localStorage.getItem('dash_orders');
+  if (cached) {
+    try { allOrders = JSON.parse(cached); renderTable(); updateStats(); } catch(e) {}
+  }
+  syncOrders();
+  setInterval(syncOrders, 30000);
+}
+
+async function syncOrders() {
+  var btn = document.getElementById('sync-btn');
+  btn.textContent = '⟳ ...';
+  showBar('⏳ جاري المزامنة...');
+  try {
+    var res  = await fetch(AT_URL + '?pageSize=100', { headers: HDR });
+    var data = await res.json();
+    if (!res.ok) { showBar('❌ ' + (data.error && data.error.message || res.status)); setTimeout(hideBar, 4000); btn.textContent = '⟳ مزامنة'; return; }
+    allOrders = (data.records || []).map(function(r) {
+      var f = r.fields || {};
+      return {
+        _id:  r.id,
+        ref:  f['Reference']      || '',
+        date: f['Date']           || '',
+        prod: f['Produit']        || '',
+        nom:  f['Nom Client']     || '',
+        tel:  f['Telephone']      || '',
+        wil:  f['Wilaya']         || '',
+        adr:  f['Adresse']        || '',
+        mod:  f['Mode Livraison'] || '',
+        prix: f['Prix Produit']   || 0,
+        liv:  f['Frais Livraison']|| 0,
+        tot:  f['Totales']        || 0,
+        msg:  f['Message']        || '',
+        cat:  f['Categorie']      || '',
+        stat: f['Statut']         || 'En attente'
+      };
+    }).filter(function(o) { return o.ref; })
+      .sort(function(a,b) { return b.date.localeCompare(a.date); });
+    localStorage.setItem('dash_orders', JSON.stringify(allOrders));
+    renderTable();
+    updateStats();
+    showBar('✅ ' + allOrders.length + ' طلبية');
+    setTimeout(hideBar, 2000);
+  } catch(e) {
+    showBar('❌ ' + e.message);
+    setTimeout(hideBar, 4000);
+  }
+  btn.textContent = '⟳ مزامنة';
+}
+
+// ── RENDER ─────────────────────────────────────────
+function renderTable() {
+  var q = document.getElementById('search-inp').value.toLowerCase();
+  var list = allOrders.filter(function(o) {
+    if (o.stat === 'Supprimée') return false;
+    if (curFilter !== 'all' && o.stat !== curFilter) return false;
+    if (q) { var h = [o.ref,o.nom,o.tel,o.wil,o.prod].join(' ').toLowerCase(); return h.indexOf(q) !== -1; }
+    return true;
+  });
+  document.getElementById('ord-count').textContent = list.length + ' طلبية';
+  var body = document.getElementById('tbl-body');
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="9"><div class="empty"><div style="font-size:2rem">🌸</div><div>' + (allOrders.length ? 'لا توجد نتائج' : 'لا توجد طلبيات بعد') + '</div></div></td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(function(o) {
+    return '<tr>' +
+      '<td><span class="ref">' + o.ref + '</span></td>' +
+      '<td style="font-size:0.75rem;opacity:0.6;white-space:nowrap">' + fmtDate(o.date) + '</td>' +
+      '<td style="max-width:160px;font-weight:600">' + o.prod + '</td>' +
+      '<td><div style="font-weight:600">' + o.nom + '</div><div style="font-size:0.74rem;opacity:0.6">' + o.tel + '</div></td>' +
+      '<td style="font-size:0.8rem">📍 ' + o.wil + '</td>' +
+      '<td style="font-size:0.75rem">' + (o.mod || '—') + '</td>' +
+      '<td style="font-weight:700;white-space:nowrap">' + Number(o.tot).toLocaleString() + ' دج</td>' +
+      '<td><span class="badge ' + badgeClass(o.stat) + '" onclick="openModal(\'' + o.ref + '\')">' + o.stat + '</span></td>' +
+      '<td>' +
+        '<a class="ab" href="tel:' + fmtPhone(o.tel) + '" title="اتصال">📞</a>' +
+        '<button class="ab" onclick="openModal(\'' + o.ref + '\')" title="تفاصيل">ℹ️</button>' +
+        '<button class="ab del" onclick="delOrder(\'' + o.ref + '\',\'' + (o._id||'') + '\')" title="حذف">🗑</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function updateStats() {
+  var v = allOrders.filter(function(o){ return o.stat !== 'Supprimée'; });
+  document.getElementById('st-total').textContent = v.length;
+  document.getElementById('st-wait').textContent  = v.filter(function(o){ return o.stat === 'En attente'; }).length;
+  document.getElementById('st-done').textContent  = v.filter(function(o){ return o.stat === 'Livrée'; }).length;
+  document.getElementById('st-rev').textContent   = v.reduce(function(s,o){ return s + (parseFloat(o.tot)||0); }, 0).toLocaleString();
+}
+
+// ── FILTER ─────────────────────────────────────────
+document.querySelectorAll('.ftab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.ftab').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    curFilter = btn.dataset.f;
+    renderTable();
+  });
+});
+document.getElementById('search-inp').addEventListener('input', renderTable);
+document.getElementById('sync-btn').addEventListener('click', syncOrders);
+
+// ── MODAL ──────────────────────────────────────────
+function openModal(ref) {
+  var o = allOrders.find(function(x){ return x.ref === ref; });
+  if (!o) return;
+  curOrder  = o;
+  curStatus = o.stat;
+  document.getElementById('m-ref').textContent  = o.ref;
+  document.getElementById('m-date').textContent = o.date;
+  document.getElementById('m-prod').textContent = o.prod;
+  document.getElementById('m-prix').textContent = Number(o.prix||0).toLocaleString() + ' دج';
+  document.getElementById('m-liv').textContent  = Number(o.liv||0).toLocaleString() + ' دج';
+  document.getElementById('m-tot').textContent  = Number(o.tot||0).toLocaleString() + ' دج';
+  document.getElementById('m-nom').textContent  = o.nom;
+  document.getElementById('m-tel').textContent  = o.tel;
+  document.getElementById('m-wil').textContent  = o.wil;
+  document.getElementById('m-adr').textContent  = o.adr || '—';
+  document.getElementById('m-mod').textContent  = o.mod || '—';
+  var mr = document.getElementById('m-msg-row');
+  if (o.msg) { mr.style.display='flex'; document.getElementById('m-msg').textContent = o.msg; }
+  else mr.style.display = 'none';
+  document.getElementById('call-link').href = 'tel:' + fmtPhone(o.tel);
+  document.querySelectorAll('.sopt').forEach(function(s) {
+    s.classList.toggle('sel', s.dataset.s === o.stat);
+  });
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+document.querySelectorAll('.sopt').forEach(function(s) {
+  s.addEventListener('click', function() {
+    document.querySelectorAll('.sopt').forEach(function(x){ x.classList.remove('sel'); });
+    s.classList.add('sel');
+    curStatus = s.dataset.s;
+  });
+});
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('modal-cls').addEventListener('click', closeModal);
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+document.getElementById('save-btn').addEventListener('click', async function() {
+  if (!curOrder || !curStatus) return;
+  curOrder.stat = curStatus;
+  var idx = allOrders.findIndex(function(o){ return o.ref === curOrder.ref; });
+  if (idx >= 0) allOrders[idx].stat = curStatus;
+  localStorage.setItem('dash_orders', JSON.stringify(allOrders));
+  renderTable(); updateStats(); closeModal();
+  toast('✅ تم تحديث الحالة', 'ok');
+  if (curOrder._id) {
+    try {
+      await fetch(AT_URL + '/' + curOrder._id, {
+        method: 'PATCH', headers: HDR,
+        body: JSON.stringify({ fields: { 'Statut': curStatus } })
+      });
+    } catch(e) {}
+  }
+});
+
+// ── DELETE ─────────────────────────────────────────
+async function delOrder(ref, atId) {
+  if (!confirm('حذف الطلبية ' + ref + ' نهائياً؟')) return;
+  allOrders = allOrders.filter(function(o){ return o.ref !== ref; });
+  localStorage.setItem('dash_orders', JSON.stringify(allOrders));
+  renderTable(); updateStats();
+  toast('🗑️ تم الحذف', 'ok');
+  if (atId) {
+    try { await fetch(AT_URL + '/' + atId, { method: 'DELETE', headers: HDR }); } catch(e) {}
+  }
+}
+
+// ── PRINT / EXPORT ─────────────────────────────────
+document.getElementById('prt-btn').addEventListener('click', function() {
+  if (!curOrder) return;
+  var o = curOrder;
+  var w = window.open('', '_blank', 'width=600,height=700');
+  w.document.write('<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial;padding:30px;color:#222}h2{color:#C2607A}table{width:100%;border-collapse:collapse}td{padding:8px 12px;border-bottom:1px solid #eee}td:first-child{opacity:.6;width:160px;font-weight:bold}.tot{color:#C2607A;font-weight:800;font-size:1.1rem}</style></head><body>');
+  w.document.write('<h2>Petite Chérie — بون تسليم</h2><p style="opacity:.5">' + o.ref + ' | ' + o.date + '</p><table>');
+  w.document.write('<tr><td>المنتج</td><td>' + o.prod + '</td></tr>');
+  w.document.write('<tr><td>الزبونة</td><td>' + o.nom + '</td></tr>');
+  w.document.write('<tr><td>الهاتف</td><td>' + o.tel + '</td></tr>');
+  w.document.write('<tr><td>الولاية</td><td>' + o.wil + '</td></tr>');
+  w.document.write('<tr><td>العنوان</td><td>' + (o.adr||'—') + '</td></tr>');
+  w.document.write('<tr><td>طريقة التوصيل</td><td>' + (o.mod||'—') + '</td></tr>');
+  if (o.msg) w.document.write('<tr><td>ملاحظة</td><td>' + o.msg + '</td></tr>');
+  w.document.write('<tr><td>سعر المنتج</td><td>' + Number(o.prix||0).toLocaleString() + ' دج</td></tr>');
+  w.document.write('<tr><td>التوصيل</td><td>' + Number(o.liv||0).toLocaleString() + ' دج</td></tr>');
+  w.document.write('<tr><td>المجموع</td><td class="tot">' + Number(o.tot||0).toLocaleString() + ' دج</td></tr>');
+  w.document.write('<tr><td>الحالة</td><td>' + o.stat + '</td></tr>');
+  w.document.write('</table><p style="margin-top:30px;opacity:.4;font-size:.75rem;text-align:center">Petite Chérie DZ 🌸</p></body></html>');
+  w.document.close(); w.print();
+});
+
+document.getElementById('csv-btn').addEventListener('click', function() {
+  var rows = [['Reference','Date','Produit','Nom','Telephone','Wilaya','Adresse','Mode','Prix','Livraison','Total','Message','Statut']];
+  allOrders.filter(function(o){ return o.stat !== 'Supprimée'; }).forEach(function(o) {
+    rows.push([o.ref,o.date,o.prod,o.nom,o.tel,o.wil,o.adr,o.mod,o.prix,o.liv,o.tot,o.msg,o.stat].map(function(v){ return '"'+(v||'').toString().replace(/"/g,'""')+'"'; }));
+  });
+  var csv = '\uFEFF' + rows.map(function(r){ return r.join(','); }).join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = 'commandes-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+});
+
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+
+// ── HELPERS ────────────────────────────────────────
+function badgeClass(s) {
+  if (!s) return 'b-wait';
+  if (s === 'En attente')   return 'b-wait';
+  if (s === 'Confirmée')    return 'b-conf';
+  if (s === 'En livraison') return 'b-ship';
+  if (s === 'Livrée')       return 'b-done';
+  if (s === 'Annulée')      return 'b-cancel';
+  return 'b-wait';
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString('ar-DZ'); } catch(e) { return d; }
+}
+
+function fmtPhone(p) {
+  if (!p) return '';
+  var n = String(p).replace(/[^0-9]/g,'');
+  if (n.startsWith('0') && n.length === 10) return '+213' + n.slice(1);
+  if (n.startsWith('213') && n.length === 12) return '+' + n;
+  return '+' + n;
+}
+
+function showBar(m) { var b=document.getElementById('sbar'); b.textContent=m; b.style.display='block'; }
+function hideBar()  { document.getElementById('sbar').style.display='none'; }
+
+var _tt;
+function toast(m, t) {
+  var el = document.getElementById('toast');
+  el.textContent = m;
+  el.className = 'toast show' + (t ? ' '+t : '');
+  clearTimeout(_tt);
+  _tt = setTimeout(function(){ el.className='toast'; }, 2800);
+}
+</script>
+</body>
+</html>
